@@ -572,7 +572,7 @@ def parsePositions(baseGlyph, markGlyph, font, markTransformMap, advanceWidth, a
         if positionXYSplit in position:
             positions = position.split(positionXYSplit)
             if len(positions) == 6:
-                matrix = True
+                matrix = True if not baseGlyph else False
                 xx, xy, yx, yy, positionX, positionY = positions
                 x  = float(positionX)
                 y  = float(positionY)

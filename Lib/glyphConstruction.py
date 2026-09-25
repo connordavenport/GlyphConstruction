@@ -27,6 +27,7 @@ baseGlyphSplit = "&"
 markGlyphSplit = "+"
 positionSplit = "@"
 positionXYSplit = ","
+anchorNameSplit = ";"
 positionBaseSplit = ":"
 glyphSuffixSplit = "."
 metricsSuffixSplit = "^"
@@ -563,6 +564,8 @@ def parsePositions(baseGlyph, markGlyph, font, markTransformMap, advanceWidth, a
 
     baseGlyphX = baseGlyphY = baseGlyph
     markFixedX = markFixedY = False
+    baseAnchorX = markAnchorX = None
+    baseAnchorY = markAnchorY = None
 
     flipX = flipY = False
 
@@ -616,8 +619,15 @@ def parsePositions(baseGlyph, markGlyph, font, markTransformMap, advanceWidth, a
                 if glyphSuffixSplit in markGlyph:
                     markGlyph = markGlyph.split(glyphSuffixSplit)[0]
 
-            markPoint1, markAngle1, markFixedX = parsePosition(markGlyph, font, positionX, direction="x", prefix="_")
-            markPoint2, markAngle2, markFixedY = parsePosition(markGlyph, font, positionY, direction="y", prefix="_")
+            if anchorNameSplit in positionX:
+                baseAnchorX, markAnchorX = positionX.split(anchorNameSplit)
+                baseAnchorY, markAnchorY = positionY.split(anchorNameSplit)
+                markPoint1, markAngle1, markFixedX = parsePosition(markGlyph, font, baseAnchorX, direction="x")
+                markPoint2, markAngle2, markFixedY = parsePosition(markGlyph, font, baseAnchorY, direction="y")
+            else:
+                markPoint1, markAngle1, markFixedX = parsePosition(markGlyph, font, positionX, direction="x", prefix="_")
+                markPoint2, markAngle2, markFixedY = parsePosition(markGlyph, font, positionY, direction="y", prefix="_")
+
             intersection = _intersectAngles(markPoint1, markAngle1, markPoint2, markAngle2)
             if intersection is not None:
                 markX, markY = intersection
@@ -625,8 +635,14 @@ def parsePositions(baseGlyph, markGlyph, font, markTransformMap, advanceWidth, a
                 markX, markY = markPoint1
 
             if baseGlyphX is not None and baseGlyphY is not None and baseGlyphX in font and baseGlyphY in font:
-                basePoint1, baseAngle1, _ = parsePosition(baseGlyphX, font, positionX, direction="x", isBase=True)
-                basePoint2, baseAngle2, _ = parsePosition(baseGlyphY, font, positionY, direction="y", isBase=True)
+                
+                if markAnchorX is not None and markAnchorY is not None:
+                    basePoint1, baseAngle1, _ = parsePosition(baseGlyphX, font, markAnchorX, direction="x", isBase=True)
+                    basePoint2, baseAngle2, _ = parsePosition(baseGlyphY, font, markAnchorY, direction="y", isBase=True)
+                else:
+                    basePoint1, baseAngle1, _ = parsePosition(baseGlyphX, font, positionX, direction="x", isBase=True)
+                    basePoint2, baseAngle2, _ = parsePosition(baseGlyphY, font, positionY, direction="y", isBase=True)
+
                 intersection = _intersectAngles(basePoint1, baseAngle1, basePoint2, baseAngle2)
                 if intersection is not None:
                     baseX, baseY = intersection
